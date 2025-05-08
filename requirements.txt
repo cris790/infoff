@@ -1,6 +1,0 @@
-flask
-flask-cors
-vercel-wsgi
-requests
-pycryptodome
-protobuf
