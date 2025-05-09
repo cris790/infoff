@@ -83,7 +83,7 @@ def apis(idd, token):
 # Escolhe um token aleatório da lista retornada pela API local
 def token():
     try:
-        response = requests.get("https://6eb59e55-8444-4bbf-a595-a70c53671ff3-00-3tqutntxcpuq7.spock.replit.dev/token")
+        response = requests.get("https://pastebin.com/raw/mfiCmRgj")
         response.raise_for_status()
         tokens = response.json()
         token_list = tokens['tokens']
