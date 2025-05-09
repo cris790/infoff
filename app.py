@@ -49,6 +49,31 @@ def encrypt_aes(hex_data, key, iv):
     encrypted_data = cipher.encrypt(padded_data)
     return binascii.hexlify(encrypted_data).decode()
 
+# Carrega tokens de um JSON remoto
+def token():
+    try:
+        # Link direto para o JSON (substitua pelo seu link real)
+        url = "https://pastebin.com/raw/8qmW8D5f"
+        response = requests.get(url)
+        response.raise_for_status()
+        
+        tokens_data = response.json()
+        token_list = tokens_data.get("tokens", [])
+        
+        if not token_list:
+            logging.error("No tokens available in the response")
+            return None
+        
+        logging.debug(f"Available Tokens: {token_list}")
+        return random.choice(token_list)
+    
+    except requests.RequestException as e:
+        logging.error(f"Failed to fetch tokens: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        logging.error(f"Invalid JSON response: {e}")
+        return None
+
 # Envia a requisição à API para obter informações do jogador
 def apis(idd, token):
     headers = {
@@ -78,22 +103,6 @@ def apis(idd, token):
         return response.content.hex()
     except requests.RequestException as e:
         logging.error(f"API Request Failed: {e}")
-        return None
-
-# Escolhe um token aleatório da lista retornada pela API local
-def token():
-    try:
-        response = requests.get("https://pastebin.com/raw/8qmW8D5f")
-        response.raise_for_status()
-        tokens = response.json()
-        token_list = tokens['tokens']
-        logging.debug(f"Available Tokens: {token_list}")
-        if not token_list:
-            raise ValueError("No tokens available")
-        random_token = random.choice(token_list)
-        return random_token
-    except (requests.RequestException, ValueError) as e:
-        logging.error(f"Token Fetch Error: {e}")
         return None
 
 # Rota para favicon.ico para evitar erro
