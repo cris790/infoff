@@ -83,7 +83,7 @@ def apis(idd, token):
 # Escolhe um token aleatório da lista retornada pela API local
 def token():
     try:
-        response = requests.get("https://pastebin.com/raw/mfiCmRgj")
+        response = requests.get("https://pastebin.com/raw/8qmW8D5f")
         response.raise_for_status()
         tokens = response.json()
         token_list = tokens['tokens']
