@@ -53,7 +53,7 @@ def encrypt_aes(hex_data, key, iv):
 def token():
     try:
         # Link direto para o JSON (substitua pelo seu link real)
-        url = "https://pastebin.com/raw/8qmW8D5f"
+        url = "https://6eb59e55-8444-4bbf-a595-a70c53671ff3-00-3tqutntxcpuq7.spock.replit.dev/token"
         response = requests.get(url)
         response.raise_for_status()
         
