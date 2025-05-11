@@ -4,3 +4,4 @@ user_agent
 requests
 pycryptodome
 protobuf
+crypto
