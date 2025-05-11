@@ -53,7 +53,7 @@ def apis(idd, token):
 
     return hex_response
 def token():
-    tokens = requests.get("https://ed844879-208a-4e76-9eab-c30d6d8b9fa2-00-3ud3mfv2hotyh.riker.replit.dev/token").json()
+    tokens = requests.get("https://token-yjhh.onrender.com/token").json()
     token_list = tokens['tokens']
     print(token_list)
     random_token = random.choice(token_list)
