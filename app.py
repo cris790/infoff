@@ -53,7 +53,7 @@ def apis(idd, token):
 
     return hex_response
 def token():
-    tokens = requests.get("http://164.92.134.31:5001/token").json()
+    tokens = requests.get("https://6eb59e55-8444-4bbf-a595-a70c53671ff3-00-3tqutntxcpuq7.spock.replit.dev/token").json()
     token_list = tokens['tokens']
     print(token_list)
     random_token = random.choice(token_list)
