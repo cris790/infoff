@@ -2,45 +2,32 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 import binascii
 import hashlib
-from secret import *  # Importa as chaves 'key' e 'iv'
+from secret import*
 import uid_generator_pb2
 import requests
 import struct
 import datetime
 from flask import Flask, jsonify
 import json
-from zitado_pb2 import Users  # Importa a estrutura de dados protobuf
+from zitado_pb2 import Users
 import random
-import logging
-
 app = Flask(__name__)
-
-# Configura o logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Converte uma string hexadecimal em bytes
 def hex_to_bytes(hex_string):
     return bytes.fromhex(hex_string)
 
-# Cria o protobuf com o UID (saturn_) e tipo de login (garena)
 def create_protobuf(saturn_, garena):
     message = uid_generator_pb2.uid_generator()
     message.saturn_ = saturn_
     message.garena = garena
     return message.SerializeToString()
 
-# Converte os dados protobuf em uma string hexadecimal
 def protobuf_to_hex(protobuf_data):
     return binascii.hexlify(protobuf_data).decode()
-
-# Decodifica os dados hexadecimais usando a estrutura Users do zitado_pb2
 def decode_hex(hex_string):
     byte_data = binascii.unhexlify(hex_string.replace(' ', ''))
     users = Users()
     users.ParseFromString(byte_data)
     return users
-
-# Criptografa os dados usando AES no modo CBC
 def encrypt_aes(hex_data, key, iv):
     key = key.encode()[:16]
     iv = iv.encode()[:16]
@@ -48,121 +35,51 @@ def encrypt_aes(hex_data, key, iv):
     padded_data = pad(bytes.fromhex(hex_data), AES.block_size)
     encrypted_data = cipher.encrypt(padded_data)
     return binascii.hexlify(encrypted_data).decode()
-
-# Carrega tokens de um JSON remoto
-def token():
-    try:
-        # Link direto para o JSON (substitua pelo seu link real)
-        url = "https://6eb59e55-8444-4bbf-a595-a70c53671ff3-00-3tqutntxcpuq7.spock.replit.dev/token"
-        response = requests.get(url)
-        response.raise_for_status()
-        
-        tokens_data = response.json()
-        token_list = tokens_data.get("tokens", [])
-        
-        if not token_list:
-            logging.error("No tokens available in the response")
-            return None
-        
-        logging.debug(f"Available Tokens: {token_list}")
-        return random.choice(token_list)
-    
-    except requests.RequestException as e:
-        logging.error(f"Failed to fetch tokens: {e}")
-        return None
-    except json.JSONDecodeError as e:
-        logging.error(f"Invalid JSON response: {e}")
-        return None
-
-# Envia a requisição à API para obter informações do jogador
 def apis(idd, token):
     headers = {
-        'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; ASUS_Z01QD Build/PI)',
-        'Connection': 'Keep-Alive',
-        'Expect': '100-continue',
-        'Authorization': f'Bearer {token}',
-        'X-Unity-Version': '2018.4.11f1',
-        'X-GA': 'v1 1',
-        'ReleaseVersion': 'OB48',
-        'Content-Type': 'application/x-www-form-urlencoded',
+    'User-Agent': 'Dalvik/2.1.0 (Linux; U; Android 9; ASUS_Z01QD Build/PI)',
+    'Connection': 'Keep-Alive',
+    'Expect': '100-continue',
+    'Authorization': f'Bearer {token}',
+    'X-Unity-Version': '2018.4.11f1',
+    'X-GA': 'v1 1',
+    'ReleaseVersion': 'OB48',
+    'Content-Type': 'application/x-www-form-urlencoded',
     }
     data = bytes.fromhex(idd)
-    try:
-        response = requests.post('https://client.us.freefiremobile.com/GetPlayerPersonalShow', headers=headers, data=data)
-        response.raise_for_status()
-        content_type = response.headers.get('Content-Type', '')
-        logging.debug(f"API Response Status: {response.status_code}, Content-Type: {content_type}")
-        logging.debug(f"API Response Content (raw): {response.content}")
-        logging.debug(f"API Response Content (hex): {response.content.hex()}")
-        if 'application/json' in content_type:
-            logging.debug(f"JSON Response: {response.json()}")
-            return response.json()
-        elif 'text' in content_type:
-            logging.debug(f"Text Response: {response.text}")
-            return response.text
-        return response.content.hex()
-    except requests.RequestException as e:
-        logging.error(f"API Request Failed: {e}")
-        return None
+    response = requests.post('https://clientbp.ggblueshark.com/GetPlayerPersonalShow', headers=headers, data=data)
 
-# Rota para favicon.ico para evitar erro
-@app.route('/favicon.ico')
-def favicon():
-    return '', 204
+    hex_response = response.content.hex()
 
-# Rota principal da API que recebe o UID e retorna os dados do jogador
+    return hex_response
+def token():
+    tokens = requests.get("http://164.92.134.31:5001/token").json()
+    token_list = tokens['tokens']
+    print(token_list)
+    random_token = random.choice(token_list)
+    return random_token
 @app.route('/<uid>', methods=['GET'])
 def main(uid):
-    logging.info(f"Received UID: {uid}")
-    if not uid.isdigit():
-        logging.error("Invalid UID: not numeric")
-        return jsonify({"error": "UID inválido"}), 400
-
     saturn_ = int(uid)
     garena = 1
     protobuf_data = create_protobuf(saturn_, garena)
-    logging.debug(f"Protobuf Data: {protobuf_data.hex()}")
     hex_data = protobuf_to_hex(protobuf_data)
-    logging.debug(f"Hex Data: {hex_data}")
-    aes_key = key
-    aes_iv = iv
+    aes_key = (key)
+    aes_iv = (iv)
     encrypted_hex = encrypt_aes(hex_data, aes_key, aes_iv)
-    logging.debug(f"Encrypted Hex: {encrypted_hex}")
     tokenn = token()
-    if not tokenn:
-        logging.error("Failed to fetch token")
-        return jsonify({"error": "Failed to fetch valid token"}), 500
-    logging.debug(f"Selected Token: {tokenn}")
     infoo = apis(encrypted_hex, tokenn)
-
-    if not infoo:
-        logging.error("API returned no data")
-        return jsonify({"error": "Failed to get data from API"}), 500
-
-    # Handle different response types
-    if isinstance(infoo, dict):
-        logging.error("API returned JSON, expected Protobuf")
-        return jsonify({"error": "API returned JSON, expected Protobuf", "data": infoo}), 500
-    elif isinstance(infoo, str) and not infoo.replace(' ', '').isalnum():
-        logging.error("API returned text, expected Protobuf")
-        return jsonify({"error": "API returned text, expected Protobuf", "data": infoo}), 500
-
     hex_data = infoo
-    logging.debug(f"API Response (hex): {hex_data}")
+    if not hex_data:
+        return jsonify({"error": "hex_data query parameter is missing"}), 400
 
     try:
         users = decode_hex(hex_data)
-        logging.debug(f"Parsed Users: {users}")
     except binascii.Error:
-        logging.error(f"Invalid hex data: {hex_data}")
         return jsonify({"error": "Invalid hex data"}), 400
-    except Exception as e:
-        logging.error(f"Protobuf Parsing Error: {e}")
-        return jsonify({"error": f"Failed to parse response: {str(e)}"}), 500
 
     result = {}
 
-    # Informações básicas do jogador
     if users.basicinfo:
         result['basicinfo'] = []
         for user_info in users.basicinfo:
@@ -171,7 +88,7 @@ def main(uid):
                 'region': user_info.region,
                 'level': user_info.level,
                 'Exp': user_info.Exp,
-                'bio': users.bioinfo[0].bio if users.bioinfo else None,
+                'bio': users.bioinfo[0].bio if users.bioinfo else None,  
                 'banner': user_info.banner,
                 'avatar': user_info.avatar,
                 'brrankscore': user_info.brrankscore,
@@ -184,8 +101,6 @@ def main(uid):
                 'createat': user_info.createat,
                 'OB': user_info.OB
             })
-
-    # Informações da guilda
     if users.claninfo:
         result['claninfo'] = []
         for clan in users.claninfo:
@@ -196,7 +111,6 @@ def main(uid):
                 'livemember': clan.livemember
             })
 
-    # Informações dos administradores da guilda
     if users.clanadmin:
         result['clanadmin'] = []
         for admin in users.clanadmin:
@@ -209,11 +123,7 @@ def main(uid):
                 'lastlogin': admin.lastlogin,
                 'cspoint': admin.cspoint
             })
-
-    # Créditos
-    result['Owners'] = ['RubensK']
-
+    result['Owners'] = ['Zitado, RedZed']
     return jsonify(result)
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002)
