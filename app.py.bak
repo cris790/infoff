@@ -53,7 +53,7 @@ def apis(idd, token):
 
     return hex_response
 def token():
-    tokens = requests.get("https://token-yjhh.onrender.com/token").json()
+    tokens = requests.get("https://token-w2wd.onrender.com/token").json()
     token_list = tokens['tokens']
     print(token_list)
     random_token = random.choice(token_list)
