@@ -86,7 +86,18 @@ def token():
         response = requests.get("https://token-w2wd.onrender.com/token")
         response.raise_for_status()
         tokens = response.json()
-        token_list = tokens['tokens']
+
+        # Handle both old format (list of strings) and new format (list of dicts with "token" key)
+        if isinstance(tokens, list) and len(tokens) > 0:
+            if isinstance(tokens[0], dict) and 'token' in tokens[0]:
+                token_list = [item['token'] for item in tokens if 'token' in item]
+            else:
+                token_list = tokens  # Assume it's a list of strings (old format)
+        elif isinstance(tokens, dict) and 'tokens' in tokens:
+            token_list = tokens['tokens']  # Old format with 'tokens' key
+        else:
+            raise ValueError("Unexpected token format")
+
         logging.debug(f"Available Tokens: {token_list}")
         if not token_list:
             raise ValueError("No tokens available")
