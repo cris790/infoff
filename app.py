@@ -85,21 +85,8 @@ def token():
     try:
         response = requests.get("https://tokensff.vercel.app/token")
         response.raise_for_status()
-        tokens_data = response.json()
-        
-        # Check if the response is in the expected format
-        if isinstance(tokens_data, list):
-            # Old format - list of tokens directly
-            token_list = tokens_data
-        elif isinstance(tokens_data, dict) and 'tokens' in tokens_data:
-            # New format - tokens inside 'tokens' key
-            token_list = tokens_data['tokens']
-        elif all(isinstance(item, dict) and 'token' in item for item in tokens_data):
-            # New format - array of objects with 'token' property
-            token_list = [item['token'] for item in tokens_data]
-        else:
-            raise ValueError("Unexpected token response format")
-            
+        tokens = response.json()
+        token_list = tokens['tokens']
         logging.debug(f"Available Tokens: {token_list}")
         if not token_list:
             raise ValueError("No tokens available")
