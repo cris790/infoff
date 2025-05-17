@@ -83,7 +83,7 @@ def apis(idd, token):
 # Escolhe um token aleatório da lista retornada pela API local
 def token():
     try:
-        response = requests.get("oiiiiiiiiiiiiiiiiiiii")
+        response = requests.get("https://tokensff.vercel.app/token")
         response.raise_for_status()
         tokens_data = response.json()
         
