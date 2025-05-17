@@ -87,25 +87,16 @@ def token():
         response.raise_for_status()
         tokens_data = response.json()
         
-        # Check if the response is in the expected format
-        if isinstance(tokens_data, list):
-            # Old format - list of tokens directly
-            token_list = tokens_data
-        elif isinstance(tokens_data, dict) and 'tokens' in tokens_data:
-            # New format - tokens inside 'tokens' key
-            token_list = tokens_data['tokens']
-        elif all(isinstance(item, dict) and 'token' in item for item in tokens_data):
-            # New format - array of objects with 'token' property
-            token_list = [item['token'] for item in tokens_data]
-        else:
-            raise ValueError("Unexpected token response format")
+        # Filter out only items that have a 'token' field
+        valid_tokens = [item['token'] for item in tokens_data if 'token' in item]
+        
+        logging.debug(f"Available Tokens: {valid_tokens}")
+        if not valid_tokens:
+            raise ValueError("No valid tokens available")
             
-        logging.debug(f"Available Tokens: {token_list}")
-        if not token_list:
-            raise ValueError("No tokens available")
-        random_token = random.choice(token_list)
+        random_token = random.choice(valid_tokens)
         return random_token
-    except (requests.RequestException, ValueError) as e:
+    except (requests.RequestException, ValueError, KeyError) as e:
         logging.error(f"Token Fetch Error: {e}")
         return None
 
